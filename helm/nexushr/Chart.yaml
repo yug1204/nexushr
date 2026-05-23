@@ -1,0 +1,15 @@
+# NexusHR Helm Chart
+# Day 23: Kubernetes manifests & Helm chart
+apiVersion: v2
+name: nexushr
+description: NexusHR - AI-Enabled Enterprise HR Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - hr
+  - microservices
+  - spring-boot
+  - react
+maintainers:
+  - name: Amdox Technologies

@@ -1,0 +1,188 @@
+# Default values for NexusHR Helm chart
+# Day 23: Kubernetes manifests & Helm chart
+
+global:
+  namespace: nexushr
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# ======================== SERVICE CONFIGS ========================
+authService:
+  name: auth-service
+  replicas: 2
+  image:
+    repository: nexushr/auth-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilization: 70
+
+employeeService:
+  name: employee-service
+  replicas: 2
+  image:
+    repository: nexushr/employee-service
+    tag: latest
+  port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilization: 70
+
+payrollService:
+  name: payroll-service
+  replicas: 2
+  image:
+    repository: nexushr/payroll-service
+    tag: latest
+  port: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilization: 70
+    # Payroll scales on queue depth as well
+    customMetrics:
+      - type: Pods
+        pods:
+          metric:
+            name: payroll_queue_depth
+          target:
+            type: AverageValue
+            averageValue: 100
+
+aiService:
+  name: ai-service
+  replicas: 2
+  image:
+    repository: nexushr/ai-service
+    tag: latest
+  port: 8080
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+attendanceService:
+  name: attendance-service
+  replicas: 2
+  image:
+    repository: nexushr/attendance-service
+    tag: latest
+  port: 8080
+
+performanceService:
+  name: performance-service
+  replicas: 2
+  image:
+    repository: nexushr/performance-service
+    tag: latest
+  port: 8080
+
+notificationService:
+  name: notification-service
+  replicas: 2
+  image:
+    repository: nexushr/notification-service
+    tag: latest
+  port: 8080
+
+apiGateway:
+  name: api-gateway
+  replicas: 3
+  image:
+    repository: nexushr/api-gateway
+    tag: latest
+  port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  name: frontend
+  replicas: 2
+  image:
+    repository: nexushr/frontend
+    tag: latest
+  port: 80
+
+# ======================== INGRESS ========================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: nexushr.amdox.dev
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: api-gateway
+  tls:
+    - secretName: nexushr-tls
+      hosts:
+        - nexushr.amdox.dev
+
+# ======================== DATABASE ========================
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: nexushr_secret
+    username: nexushr
+    database: nexushr_main
+
+redis:
+  enabled: true
+  auth:
+    password: redis_secret
+  master:
+    resources:
+      limits:
+        memory: 256Mi
+
+# ======================== POD DISRUPTION BUDGET ========================
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# ======================== NETWORK POLICY ========================
+networkPolicy:
+  enabled: true

@@ -1,0 +1,63 @@
+# Prometheus configuration for NexusHR
+# Day 26: Observability & monitoring stack
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth-service:8080']
+        labels:
+          service: 'auth-service'
+
+  - job_name: 'employee-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['employee-service:8080']
+        labels:
+          service: 'employee-service'
+
+  - job_name: 'payroll-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['payroll-service:8080']
+        labels:
+          service: 'payroll-service'
+
+  - job_name: 'attendance-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['attendance-service:8080']
+        labels:
+          service: 'attendance-service'
+
+  - job_name: 'performance-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['performance-service:8080']
+        labels:
+          service: 'performance-service'
+
+  - job_name: 'ai-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['ai-service:8080']
+        labels:
+          service: 'ai-service'
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']
+        labels:
+          service: 'api-gateway'
+
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['notification-service:8080']
+        labels:
+          service: 'notification-service'

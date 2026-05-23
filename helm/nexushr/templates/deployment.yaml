@@ -1,0 +1,62 @@
+{{- range $svc := list "authService" "employeeService" "payrollService" "aiService" "attendanceService" "performanceService" "notificationService" "apiGateway" "frontend" }}
+{{- $config := index $.Values $svc }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $config.name }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app: {{ $config.name }}
+    app.kubernetes.io/name: {{ $config.name }}
+    app.kubernetes.io/part-of: nexushr
+spec:
+  replicas: {{ $config.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: {{ $config.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $config.name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ $config.port }}"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: {{ $config.name }}
+          image: "{{ $config.image.repository }}:{{ $config.image.tag }}"
+          ports:
+            - containerPort: {{ $config.port }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ $config.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ $config.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          resources:
+            {{- toYaml ($config.resources | default (dict "requests" (dict "cpu" "250m" "memory" "512Mi") "limits" (dict "cpu" "500m" "memory" "1Gi"))) | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $config.name }}
+  namespace: {{ $.Values.global.namespace }}
+spec:
+  selector:
+    app: {{ $config.name }}
+  ports:
+    - port: {{ $config.port }}
+      targetPort: {{ $config.port }}
+  type: ClusterIP
+{{- end }}

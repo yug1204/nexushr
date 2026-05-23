@@ -1,0 +1,16 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+{{- range $svc := list "authService" "employeeService" "payrollService" "apiGateway" }}
+{{- $config := index $.Values $svc }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $config.name }}-pdb
+  namespace: {{ $.Values.global.namespace }}
+spec:
+  minAvailable: {{ $.Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app: {{ $config.name }}
+{{- end }}
+{{- end }}
