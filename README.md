@@ -2,6 +2,10 @@
 
 > **Project Code:** AMX-JFS-2026-04 | **Domain:** Java Full-Stack | **Version:** 1.0
 
+> **🌐 Live Demo:** [https://yug1204.github.io/nexushr/](https://yug1204.github.io/nexushr/) — Demo credentials are on the login page
+>
+> **📦 Repository:** [https://github.com/yug1204/nexushr](https://github.com/yug1204/nexushr)
+
 ## 🚀 Overview
 
 NexusHR is a production-grade Java full-stack HR management platform covering the complete employee lifecycle — from onboarding to offboarding — with real-time attendance, automated payroll, 360-degree performance reviews, and AI-driven workforce intelligence.

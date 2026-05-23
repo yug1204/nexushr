@@ -412,8 +412,8 @@ Commit → Lint → Unit Tests → Integration Tests → Jacoco Coverage
 ---
 
 **Repository:** https://github.com/yug1204/nexushr  
-**Demo Video:** [To be added]  
-**Live Demo:** [To be added]
+**Live Demo:** https://yug1204.github.io/nexushr/  
+**Demo Video:** [To be added]
 
 ---
 
