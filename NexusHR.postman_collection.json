@@ -1,0 +1,332 @@
+{
+  "info": {
+    "name": "NexusHR API Collection",
+    "description": "Complete API collection for NexusHR — AI-Enabled Enterprise HR Platform\nProject: AMX-JFS-2026-04 | Amdox Technologies",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "employeeId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}" }]
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@nexushr.com\",\n  \"password\": \"demo1234\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"+919876543210\",\n  \"tenantId\": \"default\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var json = pm.response.json();",
+                "if(json.data) {",
+                "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@nexushr.com\",\n  \"password\": \"demo1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employee Service",
+      "item": [
+        {
+          "name": "Create Employee",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var json = pm.response.json();",
+                "if(json.data && json.data.id) {",
+                "  pm.collectionVariables.set('employeeId', json.data.id);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/employees",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Priya\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"priya.sharma@nexushr.com\",\n  \"phoneNumber\": \"+919876543210\",\n  \"gender\": \"FEMALE\",\n  \"hireDate\": \"2026-01-15\",\n  \"employmentType\": \"FULL_TIME\",\n  \"designation\": \"Senior Software Engineer\",\n  \"grade\": \"L5\",\n  \"basicSalary\": 75000,\n  \"hra\": 30000,\n  \"specialAllowance\": 15000,\n  \"ctc\": 1800000,\n  \"taxRegime\": \"NEW\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Employees",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employees?page=0&size=20"
+          }
+        },
+        {
+          "name": "Get Employee by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employees/{{employeeId}}"
+          }
+        },
+        {
+          "name": "Search Employees",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employees/search?q=Priya"
+          }
+        },
+        {
+          "name": "Get Org Chart",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employees/org-chart/{{employeeId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance & Leave",
+      "item": [
+        {
+          "name": "Clock In",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance/clock-in?employeeId={{employeeId}}"
+          }
+        },
+        {
+          "name": "Clock Out",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance/clock-out?employeeId={{employeeId}}"
+          }
+        },
+        {
+          "name": "Get Today's Attendance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attendance/today"
+          }
+        },
+        {
+          "name": "Apply Leave",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/attendance/leave/apply",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"leaveTypeId\": \"cl-001\",\n  \"startDate\": \"2026-06-01\",\n  \"endDate\": \"2026-06-03\",\n  \"totalDays\": 3,\n  \"reason\": \"Family function\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Pending Leaves",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attendance/leave/pending"
+          }
+        },
+        {
+          "name": "Get Leave Balance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attendance/leave/balance/{{employeeId}}?year=2026"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payroll Service",
+      "item": [
+        {
+          "name": "Initiate Payroll Run",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/payroll/run?month=5&year=2026"
+          }
+        },
+        {
+          "name": "Get Payslips by Run",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/payroll/{runId}/payslips"
+          }
+        },
+        {
+          "name": "Get Employee Payslip",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/payroll/payslip/{{employeeId}}?month=5&year=2026"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Performance Service",
+      "item": [
+        {
+          "name": "Create Review Cycle",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/performance/cycles",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"FY 2026 Annual Review\",\n  \"type\": \"ANNUAL\",\n  \"startDate\": \"2026-04-01\",\n  \"endDate\": \"2026-03-31\",\n  \"status\": \"GOAL_SETTING\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Goal (OKR)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/performance/goals",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"title\": \"Migrate legacy services to Spring Boot 3.3\",\n  \"description\": \"Modernize 5 legacy Java 8 services to Spring Boot 3.3 + Java 21\",\n  \"category\": \"TECHNICAL\",\n  \"weight\": 30,\n  \"dueDate\": \"2026-09-30\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Employee Goals",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/performance/goals/employee/{{employeeId}}"
+          }
+        },
+        {
+          "name": "Update Goal Progress",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/performance/goals/{goalId}/progress?progress=65"
+          }
+        },
+        {
+          "name": "Create Performance Review",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/performance/reviews",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"revieweeId\": \"{{employeeId}}\",\n  \"reviewerId\": \"mgr-001\",\n  \"cycleId\": \"cycle-001\",\n  \"reviewType\": \"ANNUAL\",\n  \"selfRating\": 4.2,\n  \"managerRating\": 4.0,\n  \"strengths\": \"Excellent technical depth, strong mentorship\",\n  \"improvements\": \"Cross-team communication could improve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/performance/reviews/{reviewId}/submit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Workforce Intelligence",
+      "item": [
+        {
+          "name": "Predict Attrition (Single)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai/predict/attrition",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"employeeName\": \"Priya Sharma\",\n  \"department\": \"Engineering\",\n  \"designation\": \"Senior Developer\",\n  \"tenureMonths\": 8,\n  \"performanceRating\": 4.5,\n  \"salaryChangePct\": 2.0,\n  \"absenceDays\": 3,\n  \"monthsSincePromotion\": 18,\n  \"engagementScore\": 6.0\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate Demo Predictions",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai/demo/generate"
+          }
+        },
+        {
+          "name": "Get AI Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ai/dashboard"
+          }
+        },
+        {
+          "name": "Get High-Risk Employees",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ai/attrition/high-risk"
+          }
+        },
+        {
+          "name": "Get Skill Gaps",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ai/skills/{{employeeId}}"
+          }
+        },
+        {
+          "name": "Analyze Skill Gaps",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/ai/skills/analyze",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"department\": \"Engineering\",\n  \"currentSkills\": {\"Java\": 80, \"Cloud Architecture\": 40, \"Machine Learning\": 20},\n  \"requiredSkills\": {\"Java\": 90, \"Cloud Architecture\": 75, \"Machine Learning\": 60}\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
