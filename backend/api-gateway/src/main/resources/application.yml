@@ -55,6 +55,18 @@ spring:
           predicates:
             - Path=/api/v1/notifications/**
 
+        # Recruitment Service
+        - id: recruitment-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/v1/recruitment/**
+
+        # Reports (served from employee-service)
+        - id: reports
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/reports/**
+
 server:
   port: 8080
 

@@ -105,4 +105,35 @@ export const aiApi = {
   generateDemo: () => api.post('/ai/demo/generate'),
 }
 
+// ========== Recruitment & Onboarding ==========
+export const recruitmentApi = {
+  createRequisition: (data: any) => api.post('/recruitment/requisitions', data),
+  getOpenRequisitions: () => api.get('/recruitment/requisitions/open'),
+  approveRequisition: (id: string, approvedBy: string) => api.put(`/recruitment/requisitions/${id}/approve?approvedBy=${approvedBy}`),
+  applyForJob: (reqId: string, data: any) => api.post(`/recruitment/candidates/apply/${reqId}`, data),
+  advanceCandidate: (id: string, stage: string) => api.put(`/recruitment/candidates/${id}/advance?stage=${stage}`),
+  getCandidates: (reqId: string) => api.get(`/recruitment/candidates/requisition/${reqId}`),
+  getDashboard: () => api.get('/recruitment/dashboard'),
+}
+
+// ========== Reports & Analytics ==========
+export const reportsApi = {
+  headcount: () => api.get('/reports/headcount'),
+  attrition: (period: string = 'MONTHLY') => api.get(`/reports/attrition?period=${period}`),
+  payrollSummary: (month: number, year: number) => api.get(`/reports/payroll-summary?month=${month}&year=${year}`),
+  leaveAnalytics: (year: number) => api.get(`/reports/leave-analytics?year=${year}`),
+  diversity: () => api.get('/reports/diversity'),
+  compensation: () => api.get('/reports/compensation-benchmarking'),
+  executive: () => api.get('/reports/executive-dashboard'),
+}
+
+// ========== Compliance & GDPR ==========
+export const complianceApi = {
+  getAuditTrail: (entityType: string, entityId: string) => api.get(`/compliance/audit/${entityType}/${entityId}`),
+  verifyChain: () => api.get('/compliance/audit/verify'),
+  gdprAccess: (empId: string) => api.get(`/compliance/gdpr/access/${empId}`),
+  gdprErasure: (empId: string) => api.post(`/compliance/gdpr/erasure/${empId}`),
+  gdprPortability: (empId: string) => api.get(`/compliance/gdpr/portability/${empId}`),
+}
+
 export default api

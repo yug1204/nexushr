@@ -7,6 +7,7 @@ CREATE DATABASE nexushr_payroll;
 CREATE DATABASE nexushr_performance;
 CREATE DATABASE nexushr_notification;
 CREATE DATABASE nexushr_ai;
+CREATE DATABASE nexushr_recruitment;
 CREATE DATABASE nexushr_keycloak;
 
 -- Grant permissions
@@ -17,4 +18,5 @@ GRANT ALL PRIVILEGES ON DATABASE nexushr_payroll TO nexushr;
 GRANT ALL PRIVILEGES ON DATABASE nexushr_performance TO nexushr;
 GRANT ALL PRIVILEGES ON DATABASE nexushr_notification TO nexushr;
 GRANT ALL PRIVILEGES ON DATABASE nexushr_ai TO nexushr;
+GRANT ALL PRIVILEGES ON DATABASE nexushr_recruitment TO nexushr;
 GRANT ALL PRIVILEGES ON DATABASE nexushr_keycloak TO nexushr;
