@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename="/nexushr">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
