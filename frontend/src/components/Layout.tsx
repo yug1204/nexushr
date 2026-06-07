@@ -1,8 +1,8 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   LayoutDashboard, Users, Clock, Wallet, Target, Brain,
-  Bell, Settings, Search, ChevronRight, LogOut, Briefcase
+  Bell, Settings, Search, ChevronRight, LogOut, Briefcase, User as UserIcon
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -31,6 +31,19 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [notifications, setNotifications] = useState(3)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -68,6 +81,7 @@ export default function Layout() {
   }, [isAuthenticated])
 
   const handleLogout = () => {
+    setShowProfileMenu(false)
     logout()
     toast.success('Signed out')
     navigate('/login')
@@ -136,7 +150,102 @@ export default function Layout() {
               }}>{notifications}</span>
             )}
           </button>
-          <div className="avatar-btn">{user?.firstName?.[0] || 'A'}{user?.lastName?.[0] || 'U'}</div>
+
+          {/* Profile Avatar with Dropdown */}
+          <div ref={profileMenuRef} style={{ position: 'relative' }}>
+            <div
+              className="avatar-btn"
+              id="profile-avatar-btn"
+              onClick={() => setShowProfileMenu(prev => !prev)}
+              style={{ outline: showProfileMenu ? '2px solid var(--accent)' : undefined, outlineOffset: '2px' }}
+            >
+              {user?.firstName?.[0] || 'A'}{user?.lastName?.[0] || 'U'}
+            </div>
+
+            {showProfileMenu && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                width: '260px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+                zIndex: 200,
+                animation: 'fadeSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+                overflow: 'hidden',
+              }}>
+                {/* User info header */}
+                <div style={{
+                  padding: '16px 20px',
+                  borderBottom: '1px solid var(--border)',
+                  background: 'rgba(79, 70, 229, 0.05)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 700, fontSize: '14px', color: '#fff',
+                      flexShrink: 0,
+                    }}>
+                      {user?.firstName?.[0] || 'A'}{user?.lastName?.[0] || 'U'}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user?.firstName || 'Admin'} {user?.lastName || 'User'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user?.email || 'admin@nexushr.com'}
+                      </div>
+                    </div>
+                  </div>
+                  {user?.roles && user.roles.length > 0 && (
+                    <div style={{ marginTop: '10px' }}>
+                      <span className="badge badge-purple" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                        {user.roles[0]?.replace('ROLE_', '').replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Menu items */}
+                <div style={{ padding: '8px' }}>
+                  <button
+                    id="profile-settings-btn"
+                    onClick={() => { setShowProfileMenu(false); navigate('/settings'); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                      background: 'transparent', border: 'none', color: 'var(--text-secondary)',
+                      fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                      transition: 'all 0.15s ease', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    <UserIcon size={16} style={{ opacity: 0.7 }} />
+                    Profile & Settings
+                  </button>
+                  <button
+                    id="profile-logout-btn"
+                    onClick={handleLogout}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                      background: 'transparent', border: 'none', color: '#ef4444',
+                      fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+                      transition: 'all 0.15s ease', textAlign: 'left',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-bg)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <LogOut size={16} style={{ opacity: 0.7 }} />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

@@ -6,7 +6,7 @@
 **Submitted by:** YUG WANKHEDE  
 **Project Code:** AMX-JFS-2026-04  
 **Domain:** Java Full-Stack  
-**Date:** May 2026  
+**Date:** June 2026  
 **Organization:** Amdox Technologies — Engineering Division
 
 ---
@@ -418,4 +418,4 @@ Commit → Lint → Unit Tests → Integration Tests → Jacoco Coverage
 ---
 
 *Crafted with precision and modern engineering principles*  
-*Amdox Technologies · Java Full-Stack Domain · May 2026*
+*Amdox Technologies · Java Full-Stack Domain · June 2026*
