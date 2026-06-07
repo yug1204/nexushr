@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import Layout from './components/Layout'
@@ -10,6 +10,7 @@ import Performance from './pages/Performance'
 import Login from './pages/Login'
 import Settings from './pages/Settings'
 import AiInsights from './pages/AiInsights'
+import Recruitment from './pages/Recruitment'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -21,7 +22,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/nexushr">
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
@@ -32,10 +33,11 @@ function App() {
             <Route path="payroll" element={<Payroll />} />
             <Route path="performance" element={<Performance />} />
             <Route path="ai-insights" element={<AiInsights />} />
+            <Route path="recruitment" element={<Recruitment />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
       <Toaster
         position="top-right"
         toastOptions={{

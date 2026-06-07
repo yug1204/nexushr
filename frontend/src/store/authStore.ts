@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authApi } from '../api/client'
 
 interface User {
   id: string
@@ -12,20 +13,38 @@ interface AuthState {
   user: User | null
   accessToken: string | null
   isAuthenticated: boolean
+  isLoading: boolean
+  loginAction: (email: string, password: string) => Promise<void>
   login: (user: User, token: string) => void
   logout: () => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: {
-    id: 'demo-user',
-    email: 'admin@nexushr.com',
-    firstName: 'Admin',
-    lastName: 'User',
-    roles: ['ROLE_HR_ADMIN'],
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isLoading: false,
+
+  loginAction: async (email: string, password: string) => {
+    set({ isLoading: true })
+    try {
+      const res = await authApi.login(email, password)
+      const { user, accessToken } = res.data.data || res.data
+      localStorage.setItem('nexushr_token', accessToken)
+      set({ user, accessToken, isAuthenticated: true, isLoading: false })
+    } catch (err: any) {
+      set({ isLoading: false })
+      throw err
+    }
   },
-  accessToken: 'demo-token',
-  isAuthenticated: true,
-  login: (user, token) => set({ user, accessToken: token, isAuthenticated: true }),
-  logout: () => set({ user: null, accessToken: null, isAuthenticated: false }),
+
+  login: (user, token) => {
+    localStorage.setItem('nexushr_token', token)
+    set({ user, accessToken: token, isAuthenticated: true })
+  },
+
+  logout: () => {
+    localStorage.removeItem('nexushr_token')
+    set({ user: null, accessToken: null, isAuthenticated: false })
+  },
 }))

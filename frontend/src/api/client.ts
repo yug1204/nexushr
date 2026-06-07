@@ -80,6 +80,10 @@ export const payrollApi = {
   getPayslips: (runId: string) => api.get(`/payroll/${runId}/payslips`),
   getPayslip: (empId: string, month: number, year: number) =>
     api.get(`/payroll/payslip/${empId}?month=${month}&year=${year}`),
+  downloadPayslipPdf: (payslipId: string) => 
+    api.get(`/payroll/payslips/${payslipId}/pdf`, { responseType: 'blob' }),
+  downloadPayrollJournal: (runId: string) => 
+    api.get(`/payroll/runs/${runId}/journal`, { responseType: 'blob' }),
 }
 
 // ========== Performance ==========

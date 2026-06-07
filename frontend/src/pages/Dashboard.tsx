@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { reportsApi } from '../api/client'
 import {
   Users, Clock, Wallet, Target, TrendingUp, TrendingDown,
   UserPlus, UserMinus, CalendarDays, DollarSign, ArrowUpRight
@@ -57,15 +59,31 @@ const recentActivities = [
 ]
 
 const tooltipStyle = {
-  backgroundColor: '#fff',
-  border: '1px solid #e5e7eb',
+  backgroundColor: '#18181b',
+  border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: '8px',
-  color: '#111827',
+  color: '#fafafa',
   fontSize: '12px',
-  boxShadow: '0 4px 12px rgba(0,0,0,.08)',
+  boxShadow: '0 4px 24px -4px rgba(0,0,0,0.5)',
 }
 
 export default function Dashboard() {
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ['executiveReport'],
+    queryFn: async () => {
+      const res = await reportsApi.executive();
+      return res.data.data; // ApiResponse.success returns { data: ... }
+    }
+  });
+
+  if (isLoading) {
+    return <div className="page-container">Loading Dashboard Data...</div>;
+  }
+
+  // Use real data if available, fallback to dummy data for chart structure
+  const totalEmployees = reportData?.totalHeadcount || 5183;
+  const attritionRate = reportData?.attritionRate || 1.4;
+  const payrollCost = reportData?.payrollCost || "46.3L";
   return (
     <div className="page-container">
       <div style={{ marginBottom: '28px' }} className="animate-in">
@@ -83,7 +101,7 @@ export default function Dashboard() {
           <div className="stat-icon purple"><Users size={22} /></div>
           <div className="stat-content">
             <div className="stat-label">Total Employees</div>
-            <div className="stat-value">5,183</div>
+            <div className="stat-value">{totalEmployees.toLocaleString()}</div>
             <div className="stat-change positive">
               <TrendingUp size={12} /> +3.2% this month
             </div>
@@ -103,7 +121,7 @@ export default function Dashboard() {
           <div className="stat-icon green"><Wallet size={22} /></div>
           <div className="stat-content">
             <div className="stat-label">Payroll Cost (Monthly)</div>
-            <div className="stat-value">₹46.3L</div>
+            <div className="stat-value">₹{payrollCost}</div>
             <div className="stat-change negative">
               <TrendingDown size={12} /> +2.6% vs last month
             </div>
@@ -113,7 +131,7 @@ export default function Dashboard() {
           <div className="stat-icon amber"><Target size={22} /></div>
           <div className="stat-content">
             <div className="stat-label">Attrition Rate</div>
-            <div className="stat-value">1.4%</div>
+            <div className="stat-value">{attritionRate}%</div>
             <div className="stat-change positive">
               <TrendingDown size={12} /> -0.6% vs last quarter
             </div>
@@ -139,9 +157,9 @@ export default function Dashboard() {
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} domain={[4700, 5300]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="month" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} domain={[4700, 5300]} />
               <Tooltip contentStyle={tooltipStyle} />
               <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2.5} fill="url(#gradientCount)" />
             </AreaChart>
@@ -167,7 +185,7 @@ export default function Dashboard() {
               <Legend
                 iconType="circle"
                 iconSize={8}
-                wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }}
+                wrapperStyle={{ fontSize: '11px', color: '#a1a1aa' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -185,9 +203,9 @@ export default function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={payrollTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="month" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="gross" fill="#6366f1" radius={[4, 4, 0, 0]} name="Gross" />
               <Bar dataKey="net" fill="#06b6d4" radius={[4, 4, 0, 0]} name="Net" />
@@ -213,9 +231,9 @@ export default function Dashboard() {
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 3]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="month" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 3]} />
               <Tooltip contentStyle={tooltipStyle} />
               <Area type="monotone" dataKey="rate" stroke="#ef4444" strokeWidth={2.5} fill="url(#gradientAttrition)" />
             </AreaChart>

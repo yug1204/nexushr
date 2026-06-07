@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -71,6 +72,12 @@ public class User extends AuditableEntity {
 
     @Column(name = "employee_id")
     private String employeeId;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private Date resetTokenExpiry;
 
     public enum UserStatus {
         ACTIVE, INACTIVE, LOCKED, PENDING_VERIFICATION

@@ -1,9 +1,11 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Users, Clock, Wallet, Target, Brain,
-  Bell, Settings, Search, Moon, ChevronRight, LogOut
+  Bell, Settings, Search, ChevronRight, LogOut, Briefcase
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import toast from 'react-hot-toast'
 
 const navItems = [
   { section: 'Overview', items: [
@@ -14,6 +16,7 @@ const navItems = [
     { to: '/attendance', icon: Clock, label: 'Attendance & Leave' },
     { to: '/payroll', icon: Wallet, label: 'Payroll' },
     { to: '/performance', icon: Target, label: 'Performance' },
+    { to: '/recruitment', icon: Briefcase, label: 'Recruitment & ATS' },
   ]},
   { section: 'Intelligence', items: [
     { to: '/ai-insights', icon: Brain, label: 'AI Insights' },
@@ -24,7 +27,56 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const { user } = useAuthStore()
+  const { user, logout, isAuthenticated } = useAuthStore()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [notifications, setNotifications] = useState(3)
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    // Attempt real WebSocket connection or fallback to simulated events
+    let socket: WebSocket | null = null
+    try {
+      socket = new WebSocket('ws://localhost:8083/ws/notifications')
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data)
+        toast(msg.content, { icon: '🔔' })
+        setNotifications(prev => prev + 1)
+      }
+    } catch (e) {
+      console.log('Falling back to simulated WebSockets for demo')
+    }
+
+    // Simulation loop for Demo purposes
+    const interval = setInterval(() => {
+      const messages = [
+        "Leave request approved by HR",
+        "New candidate applied for Tech Lead",
+        "Payroll processing completed",
+        "Suresh Kumar's engagement dropped"
+      ]
+      const randMsg = messages[Math.floor(Math.random() * messages.length)]
+      toast(randMsg, { icon: '🔔' })
+      setNotifications(prev => prev + 1)
+    }, 45000) // Emit event every 45s
+
+    return () => {
+      clearInterval(interval)
+      socket?.close()
+    }
+  }, [isAuthenticated])
+
+  const handleLogout = () => {
+    logout()
+    toast.success('Signed out')
+    navigate('/login')
+  }
+
+  // Get current page name for breadcrumb
+  const currentPage = navItems
+    .flatMap(s => s.items)
+    .find(i => location.pathname.includes(i.to.replace('/', '')))?.label || 'Dashboard'
 
   return (
     <div className="app-layout">
@@ -47,8 +99,13 @@ export default function Layout() {
             </div>
           ))}
         </nav>
-        <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
-          <div className="nav-item" style={{ color: '#dc2626' }}>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+          {user && (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', padding: '0 12px' }}>
+              {user.email}
+            </div>
+          )}
+          <div className="nav-item" style={{ color: '#ef4444' }} onClick={handleLogout}>
             <LogOut className="icon" size={18} />
             <span>Sign Out</span>
           </div>
@@ -58,9 +115,9 @@ export default function Layout() {
       <header className="header">
         <div className="header-left">
           <div className="header-breadcrumb">
-            <a href="/">NexusHR</a>
+            <a href="#/dashboard">NexusHR</a>
             <ChevronRight size={12} />
-            <span>Dashboard</span>
+            <span>{currentPage}</span>
           </div>
         </div>
         <div className="header-right">
@@ -68,8 +125,18 @@ export default function Layout() {
             <Search className="search-icon" size={14} />
             <input type="text" placeholder="Search employees, payroll..." />
           </div>
-          <button className="icon-btn"><Bell size={16} /><span className="badge">3</span></button>
-          <div className="avatar-btn">{user?.firstName?.[0]}{user?.lastName?.[0]}</div>
+          <button className="icon-btn" onClick={() => {toast(`${notifications} new notifications`); setNotifications(0)}}>
+            <Bell size={16} />
+            {notifications > 0 && (
+              <span className="badge" style={{
+                position: 'absolute', top: '-3px', right: '-3px',
+                width: '16px', height: '16px', background: 'var(--danger)', borderRadius: '50%',
+                fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', border: '2px solid var(--bg-body)',
+              }}>{notifications}</span>
+            )}
+          </button>
+          <div className="avatar-btn">{user?.firstName?.[0] || 'A'}{user?.lastName?.[0] || 'U'}</div>
         </div>
       </header>
 

@@ -2,6 +2,7 @@ package com.nexushr.ai.engine;
 
 import com.nexushr.ai.model.AttritionPrediction;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -12,20 +13,18 @@ import java.util.*;
 /**
  * Attrition Prediction Engine using a Random Forest-inspired scoring model.
  * 
- * Feature weights are derived from HR research and industry benchmarks:
- * - Tenure: Short tenure (<12 months) = higher risk
- * - Performance: Low performers and very high performers (bored) = higher risk
- * - Salary change: No raise in >18 months = higher risk
- * - Absence frequency: High absenteeism correlates with disengagement
- * - Promotion lag: >36 months without promotion = higher risk
- * - Engagement score: Direct correlation with retention
- * 
- * In production, this would be replaced by a Python FastAPI sidecar
- * running a scikit-learn Random Forest model with MLflow versioning.
+ * Feature weights are derived from HR research and industry benchmarks.
+ * Uses Spring AI for plain English recommendation generation.
  */
 @Slf4j
 @Component
 public class AttritionPredictionEngine {
+
+    private final ChatClient chatClient;
+
+    public AttritionPredictionEngine(ChatClient.Builder chatClientBuilder) {
+        this.chatClient = chatClientBuilder.build();
+    }
 
     private static final String MODEL_VERSION = "rf-v1.2.0-2026";
 

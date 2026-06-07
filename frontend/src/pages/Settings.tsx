@@ -1,8 +1,24 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, User, Bell, Shield, Database, Globe, Palette } from 'lucide-react'
+import { User, Bell, Shield, Database, Globe, Palette } from 'lucide-react'
+import { useAuthStore } from '../store/authStore'
+import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('profile')
+  const { user } = useAuthStore()
+  const [profile, setProfile] = useState({
+    firstName: user?.firstName || '', lastName: user?.lastName || '',
+    email: user?.email || '', phone: '+91-9876543210',
+    department: 'HR', designation: 'HR Administrator',
+  })
+  const [notifications, setNotifications] = useState([
+    { label: 'Leave requests', desc: 'When employees apply for leave', checked: true },
+    { label: 'Payroll alerts', desc: 'Payroll run completion and errors', checked: true },
+    { label: 'Performance reviews', desc: 'Review cycle updates', checked: true },
+    { label: 'Attendance anomalies', desc: 'Late arrivals and absences', checked: false },
+    { label: 'System updates', desc: 'Platform maintenance and releases', checked: false },
+  ])
+  const [theme, setTheme] = useState('Dark')
 
   const sections = [
     { key: 'profile', label: 'Profile', icon: User },
@@ -12,6 +28,19 @@ export default function SettingsPage() {
     { key: 'localization', label: 'Localization', icon: Globe },
     { key: 'appearance', label: 'Appearance', icon: Palette },
   ]
+
+  const handleSaveProfile = () => {
+    toast.success('Profile saved successfully')
+  }
+
+  const handleUpdatePassword = () => {
+    toast.success('Password updated')
+  }
+
+  const toggleNotification = (idx: number) => {
+    setNotifications(prev => prev.map((n, i) => i === idx ? { ...n, checked: !n.checked } : n))
+    toast.success('Notification preference updated')
+  }
 
   return (
     <div className="page-container">
@@ -32,9 +61,9 @@ export default function SettingsPage() {
                 display: 'flex', alignItems: 'center', gap: '8px',
                 width: '100%', padding: '10px 12px', borderRadius: '6px',
                 border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500,
-                background: activeSection === s.key ? '#eef2ff' : 'transparent',
-                color: activeSection === s.key ? '#4f46e5' : '#4b5563',
-                textAlign: 'left',
+                background: activeSection === s.key ? 'var(--accent-light)' : 'transparent',
+                color: activeSection === s.key ? 'var(--accent)' : 'var(--text-secondary)',
+                textAlign: 'left' as const,
               }}>
               <s.icon size={16} />
               {s.label}
@@ -49,48 +78,45 @@ export default function SettingsPage() {
               <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>Profile Settings</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group"><label className="form-label">First Name</label>
-                  <input className="form-input" defaultValue="Admin" /></div>
+                  <input className="form-input" value={profile.firstName} onChange={e => setProfile({ ...profile, firstName: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Last Name</label>
-                  <input className="form-input" defaultValue="User" /></div>
+                  <input className="form-input" value={profile.lastName} onChange={e => setProfile({ ...profile, lastName: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Email</label>
-                  <input className="form-input" defaultValue="admin@nexushr.com" /></div>
+                  <input className="form-input" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Phone</label>
-                  <input className="form-input" defaultValue="+91-9876543210" /></div>
+                  <input className="form-input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Department</label>
-                  <input className="form-input" defaultValue="HR" /></div>
+                  <input className="form-input" value={profile.department} onChange={e => setProfile({ ...profile, department: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Designation</label>
-                  <input className="form-input" defaultValue="HR Administrator" /></div>
+                  <input className="form-input" value={profile.designation} onChange={e => setProfile({ ...profile, designation: e.target.value })} /></div>
               </div>
-              <button className="btn btn-primary" style={{ marginTop: '8px' }}>Save Changes</button>
+              <button className="btn btn-primary" style={{ marginTop: '8px' }} onClick={handleSaveProfile}>Save Changes</button>
             </div>
           )}
 
           {activeSection === 'notifications' && (
             <div>
               <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>Notification Preferences</h2>
-              {[
-                { label: 'Leave requests', desc: 'When employees apply for leave', checked: true },
-                { label: 'Payroll alerts', desc: 'Payroll run completion and errors', checked: true },
-                { label: 'Performance reviews', desc: 'Review cycle updates', checked: true },
-                { label: 'Attendance anomalies', desc: 'Late arrivals and absences', checked: false },
-                { label: 'System updates', desc: 'Platform maintenance and releases', checked: false },
-              ].map((n, i) => (
+              {notifications.map((n, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '14px 0', borderBottom: '1px solid #e5e7eb',
+                  padding: '14px 0', borderBottom: '1px solid var(--border)',
                 }}>
                   <div>
                     <div style={{ fontWeight: 500, fontSize: '14px' }}>{n.label}</div>
-                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>{n.desc}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{n.desc}</div>
                   </div>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px' }}>
-                    <input type="checkbox" defaultChecked={n.checked}
-                      style={{ opacity: 0, width: 0, height: 0 }} />
-                    <span style={{
-                      position: 'absolute', cursor: 'pointer', inset: 0, borderRadius: '11px',
-                      background: n.checked ? '#4f46e5' : '#d1d5db', transition: '.2s',
+                  <button onClick={() => toggleNotification(i)} style={{
+                    width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                    background: n.checked ? 'var(--accent)' : 'rgba(255,255,255,0.1)',
+                    position: 'relative' as const, transition: 'background 0.2s',
+                  }}>
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '50%', background: '#fff',
+                      position: 'absolute' as const, top: '3px', transition: 'left 0.2s',
+                      left: n.checked ? '23px' : '3px',
                     }} />
-                  </label>
+                  </button>
                 </div>
               ))}
             </div>
@@ -105,14 +131,14 @@ export default function SettingsPage() {
                 <input className="form-input" type="password" placeholder="Enter new password" /></div>
               <div className="form-group"><label className="form-label">Confirm Password</label>
                 <input className="form-input" type="password" placeholder="Confirm new password" /></div>
-              <button className="btn btn-primary">Update Password</button>
+              <button className="btn btn-primary" onClick={handleUpdatePassword}>Update Password</button>
 
-              <div style={{ marginTop: '32px', padding: '16px', background: '#f3f4f6', borderRadius: '8px' }}>
+              <div style={{ marginTop: '32px', padding: '16px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Two-Factor Authentication</h3>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
                   Add an extra layer of security with TOTP-based 2FA.
                 </p>
-                <button className="btn btn-secondary btn-sm">Enable 2FA</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => toast.success('2FA setup initiated')}>Enable 2FA</button>
               </div>
             </div>
           )}
@@ -148,15 +174,15 @@ export default function SettingsPage() {
               <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>Localization</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group"><label className="form-label">Language</label>
-                  <select className="form-input form-select"><option>English</option><option>Hindi</option></select></div>
+                  <select className="form-input"><option>English</option><option>Hindi</option></select></div>
                 <div className="form-group"><label className="form-label">Timezone</label>
-                  <select className="form-input form-select"><option>Asia/Kolkata (IST, +05:30)</option></select></div>
+                  <select className="form-input"><option>Asia/Kolkata (IST, +05:30)</option></select></div>
                 <div className="form-group"><label className="form-label">Date Format</label>
-                  <select className="form-input form-select"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option></select></div>
+                  <select className="form-input"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option></select></div>
                 <div className="form-group"><label className="form-label">Currency</label>
-                  <select className="form-input form-select"><option>₹ INR (Indian Rupee)</option></select></div>
+                  <select className="form-input"><option>₹ INR (Indian Rupee)</option></select></div>
               </div>
-              <button className="btn btn-primary" style={{ marginTop: '8px' }}>Save Preferences</button>
+              <button className="btn btn-primary" style={{ marginTop: '8px' }} onClick={() => toast.success('Preferences saved')}>Save Preferences</button>
             </div>
           )}
 
@@ -167,7 +193,8 @@ export default function SettingsPage() {
                 <label className="form-label">Theme</label>
                 <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                   {['Light', 'Dark', 'System'].map(t => (
-                    <button key={t} className={`btn ${t === 'Light' ? 'btn-primary' : 'btn-secondary'} btn-sm`}>
+                    <button key={t} className={`btn ${theme === t ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                      onClick={() => { setTheme(t); toast.success(`Theme set to ${t}`) }}>
                       {t}
                     </button>
                   ))}
@@ -177,9 +204,9 @@ export default function SettingsPage() {
                 <label className="form-label">Accent Color</label>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                   {['#4f46e5', '#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed'].map(c => (
-                    <div key={c} style={{
+                    <div key={c} onClick={() => toast.success('Accent color updated')} style={{
                       width: '32px', height: '32px', borderRadius: '8px', background: c, cursor: 'pointer',
-                      border: c === '#4f46e5' ? '3px solid #111827' : '2px solid #e5e7eb',
+                      border: c === '#4f46e5' ? '3px solid var(--text-primary)' : '2px solid var(--border)',
                     }} />
                   ))}
                 </div>

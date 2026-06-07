@@ -73,10 +73,16 @@ public class PayrollService {
 
         try {
             // Process using virtual threads for high throughput
-            List<Payslip> payslips = employees.parallelStream().map(emp -> {
-                count.incrementAndGet();
-                return calculatePayslip(emp, runId, run.getTenantId());
-            }).toList();
+            List<Payslip> payslips = new java.util.ArrayList<>();
+            try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+                var futures = employees.stream().map(emp -> executor.submit(() -> {
+                    count.incrementAndGet();
+                    return calculatePayslip(emp, runId, run.getTenantId());
+                })).toList();
+                for (var future : futures) {
+                    payslips.add(future.get());
+                }
+            }
 
             payslipRepository.saveAll(payslips);
 

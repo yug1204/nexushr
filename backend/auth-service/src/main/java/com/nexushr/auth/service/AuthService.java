@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -89,6 +92,47 @@ public class AuthService {
     public void logout(String token) {
         jwtTokenProvider.blacklistToken(token);
         log.info("Token blacklisted");
+    }
+
+    /**
+     * Forgot password — generates a UUID reset token, saves it to the user,
+     * and sends a reset email. Adapted from batch 8 UserAuthService.
+     */
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found with email: " + email));
+
+        String token = UUID.randomUUID().toString();
+
+        user.setResetToken(token);
+        user.setResetTokenExpiry(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); // 15 minutes
+
+        userRepository.save(user);
+
+        emailService.sendResetPasswordEmail(email, token);
+        log.info("Password reset token generated for: {}", email);
+    }
+
+    /**
+     * Reset password — validates the reset token, checks expiry,
+     * updates the password, and clears the token. Adapted from batch 8 UserAuthService.
+     */
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new BusinessException("Invalid or expired reset token"));
+
+        if (user.getResetTokenExpiry().before(new Date())) {
+            throw new BusinessException("Reset token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+
+        userRepository.save(user);
+        log.info("Password reset successful for: {}", user.getEmail());
     }
 
     private AuthResponse generateAuthResponse(User user) {

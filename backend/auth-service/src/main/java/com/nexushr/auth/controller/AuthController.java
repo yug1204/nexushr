@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Auth endpoints: register, login, refresh, logout")
+@Tag(name = "Authentication", description = "Auth endpoints: register, login, refresh, logout, forgot/reset password")
 public class AuthController {
 
     private final AuthService authService;
@@ -49,5 +49,19 @@ public class AuthController {
             authService.logout(token.substring(7));
         }
         return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request a password reset email")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(null, "Reset email sent to your email address"));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using token from email")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success(null, "Password reset successful"));
     }
 }

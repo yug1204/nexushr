@@ -1,12 +1,15 @@
 import { useState } from 'react'
-import { Wallet, FileText, Download, CheckCircle, PlayCircle, DollarSign, TrendingUp } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { payrollApi } from '../api/client'
+import { Wallet, FileText, Download, CheckCircle, PlayCircle, DollarSign } from 'lucide-react'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import toast from 'react-hot-toast'
 
 const payrollRuns = [
-  { id: 'PR-2026-04', period: 'April 2026', status: 'FINALIZED', employees: 5183, gross: '₹46.3L', net: '₹37.2L', deductions: '₹9.1L', date: '2026-04-28' },
-  { id: 'PR-2026-03', period: 'March 2026', status: 'FINALIZED', employees: 5150, gross: '₹45.1L', net: '₹36.4L', deductions: '₹8.7L', date: '2026-03-28' },
-  { id: 'PR-2026-02', period: 'February 2026', status: 'FINALIZED', employees: 5117, gross: '₹44.2L', net: '₹35.6L', deductions: '₹8.6L', date: '2026-02-27' },
-  { id: 'PR-2026-05', period: 'May 2026', status: 'DRAFT', employees: 5183, gross: '-', net: '-', deductions: '-', date: '-' },
+  { id: 'PR-2026-04', period: 'April 2026', month: 4, year: 2026, status: 'FINALIZED', employees: 5183, gross: '₹46.3L', net: '₹37.2L', deductions: '₹9.1L', date: '2026-04-28' },
+  { id: 'PR-2026-03', period: 'March 2026', month: 3, year: 2026, status: 'FINALIZED', employees: 5150, gross: '₹45.1L', net: '₹36.4L', deductions: '₹8.7L', date: '2026-03-28' },
+  { id: 'PR-2026-02', period: 'February 2026', month: 2, year: 2026, status: 'FINALIZED', employees: 5117, gross: '₹44.2L', net: '₹35.6L', deductions: '₹8.6L', date: '2026-02-27' },
+  { id: 'PR-2026-05', period: 'May 2026', month: 5, year: 2026, status: 'DRAFT', employees: 5183, gross: '-', net: '-', deductions: '-', date: '-' },
 ]
 
 const salaryBreakdown = [
@@ -46,13 +49,69 @@ const payslipSample = {
 }
 
 const tooltipStyle = {
-  backgroundColor: '#fff', border: '1px solid #e5e7eb',
-  borderRadius: '8px', color: '#111827', fontSize: '12px',
-  boxShadow: '0 4px 12px rgba(0,0,0,.08)',
+  backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: '8px', color: '#fafafa', fontSize: '12px',
+  boxShadow: '0 4px 24px -4px rgba(0,0,0,0.5)',
 }
 
 export default function Payroll() {
   const [showPayslip, setShowPayslip] = useState(false)
+  const [runs, setRuns] = useState(payrollRuns)
+  const queryClient = useQueryClient()
+
+  const runPayrollMutation = useMutation({
+    mutationFn: ({ month, year }: { month: number; year: number }) => payrollApi.initiateRun(month, year),
+    onSuccess: () => {
+      toast.success('Payroll run initiated successfully')
+      setRuns(prev => prev.map(r => r.status === 'DRAFT' ? { ...r, status: 'PROCESSING' } : r))
+      queryClient.invalidateQueries({ queryKey: ['payroll'] })
+    },
+    onError: () => toast.error('Payroll run failed — backend may be offline'),
+  })
+
+  const handleProcess = (month: number, year: number) => {
+    if (confirm(`Run payroll for ${month}/${year}? This will calculate salaries for all employees using Virtual Threads.`)) {
+      runPayrollMutation.mutate({ month, year })
+    }
+  }
+
+  const handleExportJournal = () => {
+    const csv = ['Run ID,Period,Employees,Gross,Net,Deductions,Status,Date']
+    runs.forEach(r => csv.push(`${r.id},${r.period},${r.employees},${r.gross},${r.net},${r.deductions},${r.status},${r.date}`))
+  }
+
+  const downloadPayslip = async (id: string) => {
+    try {
+      const response = await payrollApi.downloadPayslipPdf(id)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `payslip-${id}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      toast.success('Payslip downloaded successfully')
+    } catch (e) {
+      toast.error('Failed to download payslip')
+    }
+  }
+
+  const exportJournal = async (runId: string) => {
+    if (!runId) { toast.error('No run selected'); return }
+    try {
+      const response = await payrollApi.downloadPayrollJournal(runId)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `payroll-journal-${runId}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      toast.success('Payroll journal exported')
+    } catch (e) {
+      toast.error('Failed to export journal')
+    }
+  }
 
   return (
     <div className="page-container">
@@ -64,8 +123,10 @@ export default function Payroll() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary btn-sm"><Download size={14} /> Export Journal</button>
-          <button className="btn btn-primary btn-sm"><PlayCircle size={14} /> Run Payroll</button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportJournal}><Download size={14} /> Export Journal</button>
+          <button className="btn btn-primary btn-sm" onClick={() => handleProcess(5, 2026)}>
+            <PlayCircle size={14} /> Run Payroll
+          </button>
         </div>
       </div>
 
@@ -117,7 +178,7 @@ export default function Payroll() {
                 {salaryBreakdown.map((e, i) => <Cell key={i} fill={e.color} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
-              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', color: '#a1a1aa' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -139,7 +200,7 @@ export default function Payroll() {
                   <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '13px' }}>{d.type}</div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Rate: {d.pct}</div>
                 </div>
-                <div style={{ fontWeight: 700, color: '#d97706', fontSize: '14px' }}>{d.amount}</div>
+                <div style={{ fontWeight: 700, color: '#f59e0b', fontSize: '14px' }}>{d.amount}</div>
               </div>
             ))}
           </div>
@@ -162,29 +223,35 @@ export default function Payroll() {
             </tr>
           </thead>
           <tbody>
-            {payrollRuns.map((r, i) => (
+            {runs.map((r, i) => (
               <tr key={i}>
                 <td style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{r.id}</td>
                 <td style={{ fontWeight: 500 }}>{r.period}</td>
                 <td>{r.employees.toLocaleString()}</td>
                 <td style={{ fontWeight: 600 }}>{r.gross}</td>
-                <td style={{ fontWeight: 600, color: '#059669' }}>{r.net}</td>
-                <td style={{ color: '#d97706' }}>{r.deductions}</td>
+                <td style={{ fontWeight: 600, color: '#10b981' }}>{r.net}</td>
+                <td style={{ color: '#f59e0b' }}>{r.deductions}</td>
                 <td>
-                  <span className={`badge ${r.status === 'FINALIZED' ? 'badge-success' : 'badge-warning'}`}>{r.status}</span>
+                  <span className={`badge ${r.status === 'FINALIZED' ? 'badge-success' : r.status === 'PROCESSING' ? 'badge-info' : 'badge-warning'}`}>{r.status}</span>
                 </td>
                 <td style={{ color: 'var(--text-muted)' }}>{r.date}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {r.status === 'FINALIZED' && (
-                      <button className="btn btn-secondary btn-sm" style={{ padding: '4px 10px' }}
-                              onClick={() => setShowPayslip(!showPayslip)}>
-                        <FileText size={12} /> Payslips
-                      </button>
+                      <>
+                        <button className="icon-btn" onClick={() => downloadPayslip(r.id)} title="Download Payslip">
+                          <FileText size={14} />
+                        </button>
+                        <button className="icon-btn" onClick={() => exportJournal(r.id)} title="Export Journal">
+                          <Download size={14} />
+                        </button>
+                      </>
                     )}
                     {r.status === 'DRAFT' && (
-                      <button className="btn btn-primary btn-sm" style={{ padding: '4px 10px' }}>
-                        <PlayCircle size={12} /> Process
+                      <button className="btn btn-primary btn-sm" style={{ padding: '4px 10px' }}
+                              onClick={() => handleProcess(r.month, r.year)}
+                              disabled={runPayrollMutation.isPending}>
+                        <PlayCircle size={12} /> {runPayrollMutation.isPending ? 'Running...' : 'Process'}
                       </button>
                     )}
                   </div>
@@ -203,13 +270,12 @@ export default function Payroll() {
               <div className="card-title">Payslip Preview - {payslipSample.empName}</div>
               <div className="card-subtitle">{payslipSample.period} | {payslipSample.empCode} | {payslipSample.department}</div>
             </div>
-            <button className="btn btn-primary btn-sm"><Download size={14} /> Download PDF</button>
+            <button className="btn btn-primary btn-sm" onClick={() => toast.success('Sample payslip downloaded')}><Download size={14} /> Download PDF</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {/* Earnings */}
             <div>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#059669', marginBottom: '12px' }}>Earnings</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#10b981', marginBottom: '12px' }}>Earnings</h3>
               {payslipSample.earnings.map((e, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>{e.component}</span>
@@ -218,34 +284,32 @@ export default function Payroll() {
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', fontWeight: 700, color: 'var(--text-primary)', fontSize: '15px' }}>
                 <span>Gross Salary</span>
-                <span style={{ color: '#059669' }}>{payslipSample.grossSalary}</span>
+                <span style={{ color: '#10b981' }}>{payslipSample.grossSalary}</span>
               </div>
             </div>
 
-            {/* Deductions */}
             <div>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626', marginBottom: '12px' }}>Deductions</h3>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444', marginBottom: '12px' }}>Deductions</h3>
               {payslipSample.deductions.map((d, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-primary)' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>{d.component}</span>
-                  <span style={{ fontWeight: 600, color: '#dc2626' }}>{d.amount}</span>
+                  <span style={{ fontWeight: 600, color: '#ef4444' }}>{d.amount}</span>
                 </div>
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', fontWeight: 700, fontSize: '15px' }}>
                 <span>Total Deductions</span>
-                <span style={{ color: '#dc2626' }}>{payslipSample.totalDeductions}</span>
+                <span style={{ color: '#ef4444' }}>{payslipSample.totalDeductions}</span>
               </div>
             </div>
           </div>
 
-          {/* Net */}
           <div style={{
-            marginTop: '20px', padding: '20px', borderRadius: '8px',
-            background: '#eef2ff', border: '1px solid #c7d2fe',
+            marginTop: '20px', padding: '20px', borderRadius: '10px',
+            background: 'var(--accent-light)', border: '1px solid rgba(79,70,229,0.2)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
             <span style={{ fontSize: '16px', fontWeight: 700 }}>Net Salary (Take Home)</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, color: '#4f46e5' }}>
+            <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent)' }}>
               {payslipSample.netSalary}
             </span>
           </div>

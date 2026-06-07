@@ -103,4 +103,33 @@ public class EmployeeDtos {
         private java.util.Map<String, Long> departmentDistribution;
         private java.util.Map<String, Long> genderDistribution;
     }
+
+    /**
+     * DTO for user profile update. Adapted from batch 8 UserProfileUpdateDTO.
+     */
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class UserProfileUpdateRequest {
+        private String userName;
+        @Email private String userOfficialEmail;
+        @Email private String personalEmail;
+        private String department;
+        private String designation;
+        private String organizationName;
+        private boolean active;
+    }
+
+    /**
+     * DTO for user profile response. Adapted from batch 8 UserProfileUpdateDTO.
+     */
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class UserProfileResponse {
+        private String id;
+        private String userName;
+        private String userOfficialEmail;
+        private String personalEmail;
+        private String department;
+        private String designation;
+        private String organizationName;
+        private boolean active;
+    }
 }

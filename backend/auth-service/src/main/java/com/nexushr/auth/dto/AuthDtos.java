@@ -72,4 +72,21 @@ public class AuthDtos {
         private String secret;
         private String qrCodeUri;
     }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class ForgotPasswordRequest {
+        @Email(message = "Valid email is required")
+        @NotBlank(message = "Email is required")
+        private String email;
+    }
+
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class ResetPasswordRequest {
+        @NotBlank(message = "Token is required")
+        private String token;
+
+        @NotBlank(message = "New password is required")
+        @Size(min = 8, max = 128, message = "Password must be 8-128 characters")
+        private String newPassword;
+    }
 }

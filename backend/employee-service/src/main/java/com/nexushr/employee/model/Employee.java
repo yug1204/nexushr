@@ -33,6 +33,9 @@ public class Employee extends AuditableEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "personal_email")
+    private String personalEmail;
+
     @Column(name = "phone_number")
     private String phoneNumber;
 
@@ -105,6 +108,13 @@ public class Employee extends AuditableEntity {
 
     @Column(name = "profile_photo_url")
     private String profilePhotoUrl;
+
+    @Column(name = "organization_name")
+    private String organizationName;
+
+    @Column(name = "active")
+    @Builder.Default
+    private boolean active = true;
 
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;

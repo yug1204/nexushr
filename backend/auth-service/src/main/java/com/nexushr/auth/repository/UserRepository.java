@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT u FROM User u WHERE u.employeeId = :employeeId AND u.deleted = false")
     Optional<User> findByEmployeeId(String employeeId);
+
+    Optional<User> findByResetToken(String resetToken);
 }

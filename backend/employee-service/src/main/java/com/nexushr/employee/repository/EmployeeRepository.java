@@ -45,4 +45,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
            "LOWER(e.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Employee> search(String query, Pageable pageable);
+
+    Optional<Employee> findByPersonalEmailAndDeletedFalse(String personalEmail);
 }
